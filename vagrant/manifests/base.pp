@@ -67,12 +67,6 @@ class install_nodejs {
     unless => "test -e /usr/bin/nodejs"
   }
 
-  exec { 'install_forever':
-    command => "sudo npm install -g forever",
-    require => Exec['install_nodejs'],
-    unless => "test -e /usr/bin/forever"
-  }
-
   exec { 'install_nodemon':
     command => "sudo npm install -g nodemon",
     require => Exec['install_nodejs'],
