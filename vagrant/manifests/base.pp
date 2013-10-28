@@ -10,7 +10,7 @@ stage { 'preinstall':
 
 class apt_get_update {
   exec { 'apt-get -y update':
-    unless => "test -e /usr/bin/nodejs"
+
   }
 }
 class { 'apt_get_update':
@@ -42,6 +42,49 @@ package { 'mongodb':
 package { 'nodejs':
   ensure => installed
 }
+
+class install_fish {
+
+  exec { 'install_libjs_jquery':
+    command => "sudo apt-get -y install libjs-jquery",
+    unless => "test -e /usr/bin/fish"
+  }
+
+    exec { 'install_bc':
+    command => "sudo apt-get -y install bc",
+    unless => "test -e /usr/bin/fish",
+    require => Exec['install_libjs_jquery']
+  }
+
+  exec { 'download_fish':
+    command => "wget http://fishshell.com/files/2.1.0/linux/Ubuntu/fish_2.1.0-1~precise_i386.deb",
+    unless => "test -e /usr/bin/fish",
+    require => Exec['install_bc']
+  }
+
+  exec { 'install_fish':
+    command => "sudo dpkg -i fish_2.1.0-1~precise_i386.deb",
+    unless => "test -e /usr/bin/fish",
+    require => Exec['download_fish']
+  }
+
+  file {['/home/vagrant/.config', '/home/vagrant/.config/fish']:
+    ensure  => directory,
+    require => Exec['install_fish']
+  }
+
+  file {'/home/vagrant/.config/fish/config.fish':
+    ensure  => file,
+    content => 'set -g -x PATH /usr/local/bin $PATH',
+    require => File['/home/vagrant/.config/fish']
+  }
+
+  exec { 'change_shell_to_fish':
+    command => "chsh -s /usr/bin/fish"
+  }
+}
+
+class { 'install_fish': }
 
 class install_nodejs {
   exec { 'install_python_soft_properties':
